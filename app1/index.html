@@ -1548,8 +1548,7 @@ body:not(.header-hidden) .section-fullscreen {
   transform: scale(0.95);
 }
 </style>
-<script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
-<script>var vConsole = new window.VConsole();</script>
+
 </head>
 <body class="flex flex-col min-h-screen" oncontextmenu="return false;">
 
@@ -2390,7 +2389,7 @@ body:not(.header-hidden) .section-fullscreen {
     let maintenanceStartTime = null;
     let richadsController = null;
     let adInterval = null; // For extra ad popup
-    
+    let lastNavAdTime = 0;
     // New Withdraw State
     let currentWithdrawMethod = null;
 
@@ -3654,17 +3653,47 @@ let statusColor = (data.status === 'approved' || data.status === 'completed') ? 
     if (targetId === 'withdrawal-history-section') {
         fetchWithdrawalHistory();
     }
+    // --- NEW: SHOW AD ON SECTION CHANGE (WITH 60 SECOND COOLDOWN) ---
+    const now = Date.now();
+    const cooldownTime = 30000; // 60 seconds (Change this to 30000 for 30 seconds)
+    
+    // Check if SDK is loaded AND if 60 seconds have passed since the last ad
+    if (typeof richadsController !== 'undefined' && richadsController !== null) {
+        if (now - lastNavAdTime > cooldownTime) {
+            lastNavAdTime = now; // Update the timer
+            
+            // Trigger the Interstitial Banner
+            try {
+                richadsController.triggerInterstitialBanner()
+                    .then(res => console.log('Navigation Ad triggered:', res))
+                    .catch(e => console.log('Navigation Ad skipped:', e));
+            } catch(e) { 
+                console.error('Nav Ad Error:', e); 
+            }
+        }
+    }
 }
 
     
     async function detectCountry() {
         try {
-            const response = await fetch('https://ipapi.co/json/');
+            // Primary: Fast, free API with no strict rate limits
+            const response = await fetch('https://api.country.is/');
+            if (!response.ok) throw new Error('Primary API failed');
             const data = await response.json();
             return data.country;
-        } catch (error) {
-            console.error('Country detection failed:', error);
-            return 'BD';
+        } catch (error1) {
+            try {
+                // Backup: Your original API just in case the first one is down
+                const fallbackResponse = await fetch('https://ipapi.co/json/');
+                if (!fallbackResponse.ok) throw new Error('Fallback API failed');
+                const fallbackData = await fallbackResponse.json();
+                return fallbackData.country_code || fallbackData.country || 'BD';
+            } catch (error2) {
+                // If AdBlocker or VPN blocks both, fail silently and use default
+                console.warn('Country detection blocked by browser. Using default (BD).');
+                return 'BD';
+            }
         }
     }
     
@@ -4314,7 +4343,7 @@ document.addEventListener('DOMContentLoaded', () => {
             richadsController.initialize({
                 pubId: "1002563",
                 appId: "6253",
-                debug: true // Set to true to test with fake ads
+                debug: false // Set to true to test with fake ads
             });
             
           // Give the SDK 1.5 seconds to fetch ad inventory from the server
