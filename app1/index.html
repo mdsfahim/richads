@@ -1548,6 +1548,8 @@ body:not(.header-hidden) .section-fullscreen {
   transform: scale(0.95);
 }
 </style>
+<script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+<script>var vConsole = new window.VConsole();</script>
 </head>
 <body class="flex flex-col min-h-screen" oncontextmenu="return false;">
 
@@ -4312,7 +4314,7 @@ document.addEventListener('DOMContentLoaded', () => {
             richadsController.initialize({
                 pubId: "1002563",
                 appId: "6253",
-                debug: false // Set to true to test with fake ads
+                debug: true // Set to true to test with fake ads
             });
             
           // Give the SDK 1.5 seconds to fetch ad inventory from the server
