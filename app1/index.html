@@ -3666,7 +3666,7 @@ let statusColor = (data.status === 'approved' || data.status === 'completed') ? 
     }
     // --- NEW: SHOW AD ON SECTION CHANGE (WITH 60 SECOND COOLDOWN) ---
     const now = Date.now();
-    const cooldownTime = 30000; // 60 seconds (Change this to 30000 for 30 seconds)
+    const cooldownTime = 5000; // 60 seconds (Change this to 30000 for 30 seconds)
     
     // Check if SDK is loaded AND if 60 seconds have passed since the last ad
     if (typeof richadsController !== 'undefined' && richadsController !== null) {
